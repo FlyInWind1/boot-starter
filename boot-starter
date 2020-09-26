@@ -7,6 +7,13 @@ start_shell_suffix=' -Dloader.path=libs -jar yifu-zhatu.jar &'
 # 项目使用的两个端口
 ports=(8000 8001)
 
+# 是否使用systemd管理项目
+use_systemd=
+# 两个用来启动项目的service的名称，需要和ports配置的端口对应
+systemd_services=(xxx xxx2)
+# systemctl 命令，需要的自己加 --user 参数
+systemd_command="systemctl "
+
 printGreen() {
     echo -ne "\e[32m$*\e[0m"
 }
@@ -57,9 +64,30 @@ stopBoot() {
     fi
 }
 
+start(){
+    if [ ! "$use_systemd" ];then
+        startBoot "${ports[$1]}"
+    else
+        exeShell "$systemd_command start ${systemd_services[$1]}"
+    fi
+}
+
 restart() {
-    stopBoot "$1"
-    startBoot "$1"
+    if [ ! "$use_systemd" ];then
+        stopBoot "${ports[$1]}"
+        startBoot "${ports[$1]}"
+    else
+        exeShell "$systemd_command restart ${systemd_services[$1]}"
+    fi
+}
+
+stop() {
+    if [ ! "$use_systemd" ];then
+        stopBoot "${ports[0]}"
+        stopBoot "${ports[1]}"
+    else
+        exeShell "$systemd_command stop ${systemd_services[*]}"
+    fi
 }
 
 status() {
@@ -79,14 +107,9 @@ status() {
     fi
 }
 
-stop() {
-    stopBoot "${ports[0]}"
-    stopBoot "${ports[1]}"
-}
-
 deployer() {
-    startBoot "$1"
-    printGreen "等待监听 $1 端口\n"
+    start "$1"
+    printGreen "等待监听 ${ports[$1]} 端口\n"
     waitListenOnPort "$1"
     echo ""
     sleep 5s
@@ -97,9 +120,9 @@ deploy() {
     local opid
     opid=$(findPidListenedOnPort "${ports[0]}")
     if [ "$opid" ]; then
-        deployer "${ports[1]}" "${ports[0]}"
+        deployer 1 0
     else
-        deployer "${ports[0]}" "${ports[1]}"
+        deployer 0 1
     fi
 }
 
