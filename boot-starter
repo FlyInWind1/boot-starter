@@ -41,7 +41,7 @@ waitListenOnPort() {
 }
 
 startBoot() {
-    printGreen  "项目启动中...\n"
+    printGreen "项目启动中...\n"
     local shell="$start_shell_perfix$1$start_shell_suffix"
     exeShell "$shell"
 }
@@ -67,12 +67,13 @@ status() {
     local checkedPort
     for port in "${ports[@]}"; do
         checkedPort=$port
-        opid=$(findPidListenedOnPort)
-        [ "$opid" ]
-        break
+        opid=$(findPidListenedOnPort "$port")
+        if [ "$opid" ]; then
+            break
+        fi
     done
     if [ "$opid" ]; then
-        printGreen "$opid 已经监听 $checkedPort 端口\n"
+        printGreen "$opid 进程已经监听 $checkedPort 端口\n"
     else
         printGreen "项目没有启动\n"
     fi
@@ -83,7 +84,7 @@ stop() {
     stopBoot "${ports[1]}"
 }
 
-deployer(){
+deployer() {
     startBoot "$1"
     printGreen "等待监听 $1 端口\n"
     waitListenOnPort "$1"
