@@ -108,14 +108,11 @@ printHelp() {
 }
 
 case "$1" in
-"start")
-    deploy
-    ;;
 "deploy")
     deploy
     ;;
 "stop")
-    stopBoot "${ports[0]}"
+    stop
     ;;
 "status")
     status
