@@ -3,7 +3,7 @@
 # 启动项目的命令，前半部分
 start_shell_perfix='nohup java -jar -Dserver.port='
 # 启动项目的命令，后半部分
-start_shell_suffix=' -Dloader.path=libs -jar yifu-zhatu.jar &'
+start_shell_suffix=' -Dloader.path=libs -jar xx.jar &'
 # 项目使用的两个端口
 ports=(8000 8001)
 
@@ -48,9 +48,7 @@ waitListenOnPort() {
 }
 
 startBoot() {
-    printGreen "项目启动中...\n"
-    local shell="$start_shell_perfix$1$start_shell_suffix"
-    exeShell "$shell"
+    exeShell "$start_shell_perfix$1$start_shell_suffix"
 }
 
 stopBoot() {
@@ -65,6 +63,7 @@ stopBoot() {
 }
 
 start(){
+    printGreen "项目启动中...\n"
     if [ ! "$use_systemd" ];then
         startBoot "${ports[$1]}"
     else
