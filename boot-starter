@@ -1,0 +1,125 @@
+#!/bin/bash
+
+# 启动项目的命令，前半部分
+start_shell_perfix='nohup java -jar -Dserver.port='
+# 启动项目的命令，后半部分
+start_shell_suffix=' -Dloader.path=libs -jar yifu-zhatu.jar &'
+# 项目使用的两个端口
+ports=(8000 8001)
+
+printGreen() {
+    echo -ne "\e[32m$*\e[0m"
+}
+printRed() {
+    echo -ne "\e[31m$*\e[0m"
+}
+
+exeShell() {
+    printGreen "$1\n$2" 1>&2
+    local shell
+    shell=$(echo -e "$1" | tr -d '\n')
+    eval "$shell"
+}
+
+# 查询监听在某一端口的程序pid
+findPidListenedOnPort() {
+    ss -lp sport eq "$1" |
+        grep -Eo ',pid=[0-9]{1,7},' |
+        grep -Eo '[0-9]+' |
+        head -1
+}
+
+killProcess() {
+    kill -15 "$1"
+}
+
+waitListenOnPort() {
+    while [ ! "$(findPidListenedOnPort $1)" ]; do
+        printGreen .
+        sleep 1s
+    done
+}
+
+startBoot() {
+    printGreen  "项目启动中...\n"
+    local shell="$start_shell_perfix$1$start_shell_suffix"
+    exeShell "$shell"
+}
+
+stopBoot() {
+    local opid
+    opid=$(findPidListenedOnPort "$1")
+    if [ "$opid" ]; then
+        printRed "等待 $opid 进程关闭\n"
+        killProcess "$opid"
+    else
+        printRed "没有程序监听 $1 端口\n"
+    fi
+}
+
+restart() {
+    stopBoot "$1"
+    startBoot "$1"
+}
+
+status() {
+    local opid
+    local checkedPort
+    for port in "${ports[@]}"; do
+        checkedPort=$port
+        opid=$(findPidListenedOnPort)
+        [ "$opid" ]
+        break
+    done
+    if [ "$opid" ]; then
+        printGreen "$opid 已经监听 $checkedPort 端口\n"
+    else
+        printGreen "项目没有启动\n"
+    fi
+}
+
+stop() {
+    stopBoot "${ports[0]}"
+    stopBoot "${ports[1]}"
+}
+
+deployer(){
+    startBoot "$1"
+    printGreen "等待监听 $1 端口\n"
+    waitListenOnPort "$1"
+    echo ""
+    sleep 5s
+    stopBoot "$2"
+}
+
+deploy() {
+    local opid
+    opid=$(findPidListenedOnPort "${ports[0]}")
+    if [ "$opid" ]; then
+        deployer "${ports[1]}" "${ports[0]}"
+    else
+        deployer "${ports[0]}" "${ports[1]}"
+    fi
+}
+
+printHelp() {
+    printGreen "start 启动项目; stop 关闭项目\n"
+}
+
+case "$1" in
+"start")
+    deploy
+    ;;
+"deploy")
+    deploy
+    ;;
+"stop")
+    stopBoot "${ports[0]}"
+    ;;
+"status")
+    status
+    ;;
+*)
+    printHelp
+    ;;
+esac
