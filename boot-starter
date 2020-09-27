@@ -36,15 +36,15 @@ findPidListenedOnPort() {
         head -1
 }
 
-killProcess() {
-    kill -15 "$1"
-}
-
 waitListenOnPort() {
     while [ ! "$(findPidListenedOnPort $1)" ]; do
         printGreen .
         sleep 1s
     done
+}
+
+killProcess() {
+    kill -15 "$1"
 }
 
 startBoot() {
@@ -62,9 +62,9 @@ stopBoot() {
     fi
 }
 
-start(){
+start() {
     printGreen "项目启动中...\n"
-    if [ ! "$use_systemd" ];then
+    if [ ! "$use_systemd" ]; then
         startBoot "${ports[$1]}"
     else
         exeShell "$systemd_command start ${systemd_services[$1]}"
@@ -72,16 +72,27 @@ start(){
 }
 
 restart() {
-    if [ ! "$use_systemd" ];then
-        stopBoot "${ports[$1]}"
-        startBoot "${ports[$1]}"
+    local opid
+    local index
+    for ((index = 1; index <= ${#ports[@]}; index++)); do
+        opid=$(findPidListenedOnPort "${ports[$index]}")
+        if [ "$opid" ]; then
+            break
+        fi
+    done
+    if [ ! "$use_systemd" ]; then
+        if [ "$opid" ]; then
+            stopBoot "${ports[$index]}"
+            index=0
+        fi
+        startBoot "${ports[$index]}"
     else
-        exeShell "$systemd_command restart ${systemd_services[$1]}"
+        exeShell "$systemd_command restart ${systemd_services[$index]}"
     fi
 }
 
 stop() {
-    if [ ! "$use_systemd" ];then
+    if [ ! "$use_systemd" ]; then
         stopBoot "${ports[0]}"
         stopBoot "${ports[1]}"
     else
@@ -132,6 +143,9 @@ printHelp() {
 case "$1" in
 "deploy")
     deploy
+    ;;
+"restart")
+    restart
     ;;
 "stop")
     stop

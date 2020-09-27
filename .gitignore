@@ -3,3 +3,4 @@ libs/
 logs/
 nohup*
 *.jar
+.idea/
