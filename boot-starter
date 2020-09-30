@@ -131,7 +131,7 @@ deployer() {
     printGreen "等待监听 ${ports[$1]} 端口\n"
     waitListenOnPort "$1"
     echo ""
-    sleep 5s
+    sleep "$deploy_sleep_time"
     stopBoot "$2"
 }
 
