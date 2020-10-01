@@ -149,9 +149,9 @@ deploy() {
 # 打印帮助
 printHelp() {
     cat <<EOF
-boot-starter [deloy|restart|stop|status]
+boot-starter [deploy|restart|stop|status]
 
-deloy       部署项目，使用两个端口交替
+deploy      部署项目，使用两个端口交替
 restart     重启项目，重启现已监听端口的项目。没有监听的话，启动第一个
 stop        关闭所有项目
 status      查看项目状态
