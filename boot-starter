@@ -36,7 +36,7 @@ findPidListenedOnPort() {
 
 # 等待某一端口被监听，没有被监听的话，会一直等待下去
 waitListenOnPort() {
-    while [ ! "$(findPidListenedOnPort $1)" ]; do
+    while [ ! "$(findPidListenedOnPort "$1")" ]; do
         printGreen .
         sleep 1s
     done
@@ -129,10 +129,10 @@ status() {
 deployer() {
     start "$1"
     printGreen "等待监听 ${ports[$1]} 端口\n"
-    waitListenOnPort "$1"
+    waitListenOnPort "${ports[$1]}"
     echo ""
     sleep "$deploy_sleep_time"
-    stopBoot "$2"
+    stopBoot "${ports[$2]}"
 }
 
 # 部署
