@@ -49,7 +49,7 @@ killProcess() {
 
 # 启动 SpringBoot 项目
 startBoot() {
-    exeShell "$start_shell_perfix$1$start_shell_suffix"
+    exeShell "$start_shell_prefix$1$start_shell_suffix"
 }
 
 # 关闭 SpringBoot 项目
