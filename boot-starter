@@ -9,13 +9,17 @@ else
     exit 1
 fi
 
-# 打印绿色字，不会自动换行
-printGreen() {
-    echo -ne "\e[32m$*\e[0m"
-}
 # 打印红色字
 printRed() {
     echo -ne "\e[31m$*\e[0m"
+}
+# 打印绿色字
+printGreen() {
+    echo -ne "\e[32m$*\e[0m"
+}
+# 打印黄色字
+printYellow() {
+    echo -ne "\e[33m$*\e[0m"
 }
 
 # 将参数作为shell执行，执行之前先打印。输出到标准错误流，以避免被$()捕获
