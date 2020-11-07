@@ -30,6 +30,20 @@ exeShell() {
     eval "$shell"
 }
 
+# 备份指定文件
+backup(){
+    local file_name
+    file_name=$(basename "$1")
+
+    local modification_time
+    modification_time=$(stat -c %y "$1")
+
+    local back_file_name
+    back_file_name="${file_name%.*}#${modification_time,0,10}#${modification_time,12,5}.${file_name#*.})"
+
+    exeShell "cp -r $1 $backup_dir/$back_file_name"
+}
+
 # 查询监听在某一端口的程序pid
 findPidListenedOnPort() {
     ss -lp sport eq "$1" |
