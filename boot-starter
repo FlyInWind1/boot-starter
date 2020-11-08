@@ -31,7 +31,7 @@ exeShell() {
 }
 
 # 备份指定文件
-backup(){
+backup() {
     local file_name
     file_name=$(basename "$1")
 
@@ -39,9 +39,18 @@ backup(){
     modification_time=$(stat -c %y "$1")
 
     local back_file_name
-    back_file_name="${file_name%.*}#${modification_time,0,10}#${modification_time,12,5}.${file_name#*.})"
+    back_file_name="${file_name%.*}#${modification_time:0:10}#${modification_time:11:5}.${file_name#*.}"
 
-    exeShell "cp -r $1 $backup_dir/$back_file_name"
+    mkdir -p "$backup_directory"
+    exeShell "cp -r $1 $backup_directory/$back_file_name"
+}
+
+# 备份所有文件
+backupAll() {
+    while [ $# != 0 ]; do
+        backup "$1"
+        shift
+    done
 }
 
 # 查询监听在某一端口的程序pid
@@ -154,7 +163,9 @@ deployer() {
 }
 
 # 部署
-deploy() {
+deployBackend() {
+    backupAll "${backend_backup_files[*]}"
+
     local opid
     opid=$(findPidListenedOnPort "${ports[0]}")
     if [ "$opid" ]; then
@@ -169,17 +180,17 @@ printHelp() {
     cat <<EOF
 boot-starter [deploy|restart|stop|status]
 
-deploy      部署项目，使用两个端口交替
-restart     重启项目，重启现已监听端口的项目。没有监听的话，启动第一个
-stop        关闭所有项目
-status      查看项目状态
+deployBackend   部署项目，使用两个端口交替
+restart         重启项目，重启现已监听端口的项目。没有监听的话，启动第一个
+stop            关闭所有项目
+status          查看项目状态
 EOF
 }
 
 # 判断选项
 case "$1" in
-"deploy")
-    deploy
+"deployBackend")
+    deployBackend
     ;;
 "restart")
     restart
