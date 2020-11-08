@@ -42,13 +42,27 @@ backup() {
     back_file_name="${file_name%.*}#${modification_time:0:10}#${modification_time:11:5}.${file_name#*.}"
 
     mkdir -p "$backup_directory"
-    exeShell "cp -r $1 $backup_directory/$back_file_name"
+    exeShell "cp -r --preserve=timestamp $1 $backup_directory/$back_file_name"
 }
 
 # 备份所有文件
 backupAll() {
     while [ $# != 0 ]; do
         backup "$1"
+        shift
+    done
+}
+
+moveAllFromNew() {
+    local new_file
+    while [ $# != 0 ]; do
+        new_file=${new_directory}/$1
+        if [ -e "$1" ]; then
+            backup "$1"
+        fi
+        if [ -e "$new_file" ]; then
+            exeShell "mv $new_file ./"
+        fi
         shift
     done
 }
@@ -162,9 +176,10 @@ deployer() {
     stopBoot "${ports[$2]}"
 }
 
-# 部署
+# 部署后端
 deployBackend() {
-    backupAll "${backend_backup_files[*]}"
+    backupAll "${backend_files[@]}"
+    moveAllFromNew "${backend_files[@]}"
 
     local opid
     opid=$(findPidListenedOnPort "${ports[0]}")
@@ -175,13 +190,29 @@ deployBackend() {
     fi
 }
 
+# 部署前端
+deployFront() {
+    backupAll "${front_files[@]}"
+    moveAllFromNew "${front_files[@]}"
+}
+
+# 部署前后端
+deploy() {
+    printYellow "部署后端中\n"
+    deployBackend
+    printYellow "\n部署前端中\n"
+    deployFront
+}
+
 # 打印帮助
 printHelp() {
     cat <<EOF
 boot-starter [deploy|restart|stop|status]
 
-deployBackend   部署项目，使用两个端口交替
-restart         重启项目，重启现已监听端口的项目。没有监听的话，启动第一个
+deployBackend   部署后端，使用两个端口交替
+deployFront     部署前端
+deploy          部署前后端
+restart         重启后端，重启现已监听端口的项目。没有监听的话，启动第一个
 stop            关闭所有项目
 status          查看项目状态
 EOF
@@ -191,6 +222,12 @@ EOF
 case "$1" in
 "deployBackend")
     deployBackend
+    ;;
+"deployFront")
+    deployFront
+    ;;
+"deploy")
+    deploy
     ;;
 "restart")
     restart
