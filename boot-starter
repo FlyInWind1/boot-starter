@@ -20,10 +20,18 @@ printGreen() {
 printYellow() {
     echo -ne "\e[33m$*\e[0m"
 }
+# 打印蓝色字
+printBlue() {
+    echo -ne "\e[34m$*\e[0m"
+}
+# 打印紫色字
+printPurple() {
+    echo -ne "\e[35m$*\e[0m"
+}
 
 # 将参数作为shell执行，执行之前先打印。输出到标准错误流，以避免被$()捕获
 exeShell() {
-    printGreen "$1\n$2" 1>&2
+    printBlue "$1\n$2" 1>&2
     local shell
     shell=$(echo -e "$1" | tr -d '\n')
     eval "$shell"
@@ -91,7 +99,7 @@ findPidListenedOnPort() {
 # 等待某一端口被监听，没有被监听的话，会一直等待下去
 waitListenOnPort() {
     while [ ! "$(findPidListenedOnPort "$1")" ]; do
-        printGreen .
+        printBlue .
         sleep 1s
     done
 }
@@ -111,16 +119,16 @@ stopBoot() {
     local opid
     opid=$(findPidListenedOnPort "$1")
     if [ "$opid" ]; then
-        printRed "等待 $opid 进程关闭。$1 端口\n"
+        printPurple "等待 $opid 进程关闭。$1 端口\n"
         killProcess "$opid"
     else
-        printRed "没有程序监听 $1 端口\n"
+        printYellow "没有程序监听 $1 端口\n"
     fi
 }
 
 # 启动
 start() {
-    printGreen "项目启动中...\n"
+    printYellow "项目启动中...\n"
     if [ ! "$use_systemd" ]; then
         startBoot "${ports[$1]}"
     else
@@ -173,16 +181,16 @@ status() {
         fi
     done
     if [ "$opid" ]; then
-        printGreen "$opid 进程已经监听 $checkedPort 端口\n"
+        printYellow "$opid 进程已经监听 $checkedPort 端口\n"
     else
-        printGreen "项目没有启动\n"
+        printYellow "项目没有启动\n"
     fi
 }
 
 # 部署后端时用到
 deployer() {
     start "$1"
-    printGreen "等待监听 ${ports[$1]} 端口\n"
+    printYellow "等待监听 ${ports[$1]} 端口\n"
     waitListenOnPort "${ports[$1]}"
     echo ""
     sleep "$deploy_sleep_time"
@@ -213,9 +221,9 @@ deployFront() {
 
 # 部署前后端
 deploy() {
-    printYellow "::部署后端中\n"
+    printGreen "::部署后端中\n"
     deployBackend
-    printYellow "\n::部署前端中\n"
+    printGreen "\n::部署前端中\n"
     deployFront
 }
 
