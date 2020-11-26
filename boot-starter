@@ -29,6 +29,17 @@ exeShell() {
     eval "$shell"
 }
 
+# 调用指定命令，如果命令不存在则跳过
+callShell() {
+    local cmd=${1%%\ *}
+    local exist=1
+    # 检查命令是否存在，不存在的话unset掉exist
+    type "$cmd" > /dev/null 2>&1 || exist=
+    if [ "$exist" ]; then
+        eval "$1"
+    fi
+}
+
 # 备份指定文件，如果第二个参数为mv那么将删除原文件
 backup() {
     local file_name
@@ -168,7 +179,7 @@ status() {
     fi
 }
 
-# 部署时用到
+# 部署后端时用到
 deployer() {
     start "$1"
     printGreen "等待监听 ${ports[$1]} 端口\n"
@@ -180,6 +191,7 @@ deployer() {
 
 # 部署后端
 deployBackend() {
+    callShell "preBackend"
     moveAllFromNew "${backend_files[@]}"
 
     local opid
@@ -189,11 +201,14 @@ deployBackend() {
     else
         deployer 0 1
     fi
+    callShell "postBackend"
 }
 
 # 部署前端
 deployFront() {
+    callShell "preFront"
     moveAllFromNew "${front_files[@]}"
+    callShell "postFront"
 }
 
 # 部署前后端
