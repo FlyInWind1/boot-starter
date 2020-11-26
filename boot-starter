@@ -1,13 +1,6 @@
 #!/bin/bash
 # shellcheck source=boot-starter.conf
 
-if [ -f ./boot-starter.conf ]; then
-    source boot-starter.conf
-else
-    echo '未找到 boot-starter.conf'
-    exit 1
-fi
-
 # 打印红色字
 printRed() {
     echo -ne "\e[31m$*\e[0m"
@@ -47,6 +40,13 @@ callShell() {
         eval "$1"
     fi
 }
+
+if [ -f ./boot-starter.conf ]; then
+    source boot-starter.conf
+else
+    echo '未找到 boot-starter.conf'
+    exit 1
+fi
 
 # 备份指定文件，如果第二个参数为mv那么将删除原文件
 backup() {
