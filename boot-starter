@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # shellcheck source=boot-starter.conf
 
 if [ -f ./boot-starter.conf ]; then
@@ -30,7 +29,7 @@ exeShell() {
     eval "$shell"
 }
 
-# 备份指定文件
+# 备份指定文件，如果第二个参数为mv那么将删除原文件
 backup() {
     local file_name
     file_name=$(basename "$1")
@@ -38,29 +37,32 @@ backup() {
     local modification_time
     modification_time=$(stat -c %y "$1")
 
-    local back_file_name
-    back_file_name="${file_name%.*}#${modification_time:0:10}#${modification_time:11:5}.${file_name#*.}"
+    local backup_file_name
+    backup_file_name="${file_name%.*}#${modification_time:0:10}#${modification_time:11:5}.${file_name#*.}"
 
     mkdir -p "$backup_directory"
-    exeShell "cp -r --preserve=timestamp $1 $backup_directory/$back_file_name"
+
+    local backup_file="$backup_directory/$backup_file_name"
+    if [ "$2" = mv ]; then
+        if [ ! -e "$backup_file" ]; then
+            exeShell "mv $1 $backup_file"
+        else
+            exeShell "rm -rf $1"
+        fi
+    else
+        exeShell "cp -r --preserve=timestamp $1 $backup_file"
+    fi
 }
 
-# 备份所有文件
-backupAll() {
-    while [ $# != 0 ]; do
-        backup "$1"
-        shift
-    done
-}
-
+# 寻找指定的新文件，如果找到，备份老文件并将新文件移动出来
 moveAllFromNew() {
     local new_file
     while [ $# != 0 ]; do
         new_file=${new_directory}/$1
-        if [ -e "$1" ]; then
-            backup "$1"
-        fi
         if [ -e "$new_file" ]; then
+            if [ -e "$1" ]; then
+                backup "$1" mv
+            fi
             exeShell "mv $new_file ./"
         fi
         shift
@@ -178,7 +180,6 @@ deployer() {
 
 # 部署后端
 deployBackend() {
-    backupAll "${backend_files[@]}"
     moveAllFromNew "${backend_files[@]}"
 
     local opid
@@ -192,15 +193,14 @@ deployBackend() {
 
 # 部署前端
 deployFront() {
-    backupAll "${front_files[@]}"
     moveAllFromNew "${front_files[@]}"
 }
 
 # 部署前后端
 deploy() {
-    printYellow "部署后端中\n"
+    printYellow "::部署后端中\n"
     deployBackend
-    printYellow "\n部署前端中\n"
+    printYellow "\n::部署前端中\n"
     deployFront
 }
 
