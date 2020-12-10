@@ -56,8 +56,10 @@ backup() {
     local modification_time
     modification_time=$(stat -c %y "$1")
 
-    local backup_file_name
-    backup_file_name="${file_name%.*}#${modification_time:0:10}#${modification_time:11:5}.${file_name#*.}"
+    if [[ "$file_name" == *.* ]]; then
+        local suffix=".${file_name#*.}"
+    fi
+    local backup_file_name="${file_name%.*}#${modification_time:0:10}#${modification_time:11:5}${suffix}"
 
     mkdir -p "$backup_directory"
 
