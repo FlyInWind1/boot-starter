@@ -35,7 +35,7 @@ callShell() {
     local cmd=${1%%\ *}
     local exist=1
     # 检查命令是否存在，不存在的话unset掉exist
-    type "$cmd" > /dev/null 2>&1 || exist=
+    type "$cmd" >/dev/null 2>&1 || exist=
     if [ "$exist" ]; then
         eval "$1"
     fi
@@ -232,11 +232,11 @@ deploy() {
 # 打印帮助
 printHelp() {
     cat <<EOF
-boot-starter [deploy|restart|stop|status]
+boot-starter [deploy|deployBackend|deployFront|restart|stop|status]
 
+deploy          部署前后端
 deployBackend   部署后端，使用两个端口交替
 deployFront     部署前端
-deploy          部署前后端
 restart         重启后端，重启现已监听端口的项目。没有监听的话，启动第一个
 stop            关闭所有项目
 status          查看项目状态
@@ -245,14 +245,14 @@ EOF
 
 # 判断选项
 case "$1" in
+"deploy")
+    deploy
+    ;;
 "deployBackend")
     deployBackend
     ;;
 "deployFront")
     deployFront
-    ;;
-"deploy")
-    deploy
     ;;
 "restart")
     restart
